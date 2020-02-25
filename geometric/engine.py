@@ -1403,6 +1403,28 @@ class Psi4(Engine):
         self.psi4_temp = psi4_temp
         self.fragn = fragn
 
+    def run_psi4(self, input_file_name, output_file_name, num_threads, dirname):
+        old_cwd = os.getcwd()
+        os.chdir(dirname)
+
+        import psi4
+
+        if num_threads is not None:
+            psi4.core.set_num_threads(self.threads, quiet=True)
+
+        psi4.core.set_memory_bytes(524288000, True)
+
+        content = None
+        with open("input.dat") as f:
+            content = f.read()
+
+        psi4.core.set_output_file(output_file_name, False)
+        psi4.core.IOManager.shared_object().set_default_path(os.getcwd())
+        content = psi4.process_input(content)
+        exec(content)
+
+        os.chdir(old_cwd)
+
     def calc_new(self, coords, dirname):
         if not os.path.exists(dirname): os.makedirs(dirname)
         # Convert coordinates back to the xyz file
@@ -1419,7 +1441,7 @@ class Psi4(Engine):
                     outfile.write(line)
         try:
             # Run Psi4
-            subprocess.check_call('psi4%s input.dat run.out' % self.nt(), cwd=dirname, shell=True)
+            self.run_psi4("input.dat", "run.out", self.threads, dirname)
             # Read energy and gradients from Psi4 output
             result = self.read_result(dirname)
         except (OSError, IOError, RuntimeError, subprocess.CalledProcessError):
