@@ -162,7 +162,7 @@ class OptParams(object):
         self.Converge_maxiter = False
         # Iterate backward through the list, in case someone lists maxiter twice.
         for i in list(range(len(criteria)))[::-1]:
-            if criteria[i].lower() == 'maxiter':
+            if isinstance(criteria[i], str) and criteria[i].lower() == 'maxiter':
                 criteria.pop(i)
                 self.Converge_maxiter = True
         if len(criteria)%2 != 0:
